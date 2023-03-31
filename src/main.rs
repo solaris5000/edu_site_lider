@@ -17,14 +17,15 @@ fn hello(name: String, age: u8) -> String {
 
 #[get("/")]
 fn index() -> Html<&'static str> {
-    Html(r"<title>GCD Calculator</title>
+    Html(r#"<title>GCD Calculator</title>
     <a href='exit'>Terminate this site</a>
 
     <form action='sendmail' method='post'>
         <input type='text' name='addr_' />
-        <input type='text' name='message_' />
+        <textarea name='message_'>Put some text here</textarea>
         <button type='submit'>Send mail</button>
-    </form>"
+    </form>
+    "#
     )
 }
 
@@ -82,6 +83,7 @@ fn sendmail(user_input : Data) -> String {
         }
     }
 
+    let text = text.replace("+", " ");
 
     let clonetextdbg = text.clone();
     let emmail = Message::builder()
