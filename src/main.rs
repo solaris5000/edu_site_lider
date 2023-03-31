@@ -111,6 +111,13 @@ fn exit() {
 }
 
 fn main() {
-    rocket::ignite().mount("/", routes![index, hello, exit, sendmail]).launch();
+
+    let cfg = rocket::config::Config::build(rocket::config::Environment::Development)
+        .address("127.0.0.1")
+        .port(80)   
+        .extra("template_dir",  "web/templates")
+        .unwrap();
+
+    rocket::custom(cfg).mount("/", routes![index, hello, exit, sendmail]).launch();
 
 }
