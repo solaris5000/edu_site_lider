@@ -18,6 +18,10 @@ use lettre::{Message, SmtpTransport, Transport};
 
 use std::fs::File;
 use std::io::{ self, BufRead, BufReader };
+<<<<<<< HEAD
+=======
+
+>>>>>>> f3b517a6d5603e4d7cbe2c16fdce3d7b03de364e
 #[get("/<name>/<age>")]
 fn hello(name: String, age: u8) -> String {
     format!("Hello, {} year old named {}!", age, name)
