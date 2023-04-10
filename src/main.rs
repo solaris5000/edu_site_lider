@@ -3,12 +3,16 @@
 #[macro_use] extern crate rocket;
 use std::io::Split;
 
-use rocket::response::content::Content;
+use rocket::Response;
+use rocket::Rocket;
+use rocket::response::content;
 use rocket::http;
 use rocket::Data;
 use rocket::response::NamedFile;
 use std::env;
 use std::path::{Path, PathBuf};
+use rocket::http::MediaType;
+use image;
 
 
 
@@ -18,10 +22,7 @@ use lettre::{Message, SmtpTransport, Transport};
 
 use std::fs::File;
 use std::io::{ self, BufRead, BufReader };
-<<<<<<< HEAD
-=======
 
->>>>>>> f3b517a6d5603e4d7cbe2c16fdce3d7b03de364e
 #[get("/<name>/<age>")]
 fn hello(name: String, age: u8) -> String {
     format!("Hello, {} year old named {}!", age, name)
@@ -51,10 +52,30 @@ fn index() -> Html<&'static str> {
 }
 
 #[get("/img/<filename>")]
-fn img(filename: String) -> Result<NamedFile, std::io::Error> {
+fn img(filename: String) -> Option<NamedFile> {
+
     let exepath = env::current_dir().unwrap();
-    let imgpath =  exepath.join("img").join(filename);
-    NamedFile::open(imgpath)
+    let imgpath =  exepath.join("static").join("img").join(filename);
+    println!("{:?}", imgpath);
+    NamedFile::open(imgpath).ok()
+}
+
+#[get("/css/<filename>")]
+fn css(filename: String) -> Option<NamedFile> {
+
+    let exepath = env::current_dir().unwrap();
+    let csspath =  exepath.join("static").join("css").join(filename);
+    println!("{:?}", csspath);
+    NamedFile::open(csspath).ok()
+}
+
+#[get("/js/<filename>")]
+fn js(filename: String) -> Option<NamedFile> {
+
+    let exepath = env::current_dir().unwrap();
+    let jspath =  exepath.join("static").join("css").join(filename);
+    println!("{:?}", jspath);
+    NamedFile::open(jspath).ok()
 }
 
 #[post("/sendmail", data="<user_input>")]
@@ -165,6 +186,6 @@ fn main() {
         .extra("template_dir",  "web/templates")
         .unwrap();
 
-    rocket::custom(cfg).mount("/", routes![index, exit, sendmail, img]).launch();
+    rocket::custom(cfg).mount("/", routes![index, exit, sendmail, img, css, js]).launch();
 
 }
