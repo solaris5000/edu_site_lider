@@ -51,6 +51,16 @@ fn index() -> Html<&'static str> {
     )*/
 }
 
+#[get("/<filename>")]
+fn resource(filename: String) -> Option<NamedFile> {
+
+    let exepath = env::current_dir().unwrap();
+    let filename = filename + ".html";
+    let rcpath =  exepath.join("static").join("resource").join(filename);
+    println!("{:?}", rcpath);
+    NamedFile::open(rcpath).ok()
+}
+
 #[get("/img/<filename>")]
 fn img(filename: String) -> Option<NamedFile> {
 
@@ -181,11 +191,11 @@ fn exit() {
 fn main() {
 
     let cfg = rocket::config::Config::build(rocket::config::Environment::Development)
-        .address("127.0.0.1")
+        .address("0.0.0.0")
         .port(80)   
         .extra("template_dir",  "web/templates")
         .unwrap();
 
-    rocket::custom(cfg).mount("/", routes![index, exit, sendmail, img, css, js]).launch();
+    rocket::custom(cfg).mount("/", routes![index, resource, exit, sendmail, img, css, js]).launch();
 
 }
