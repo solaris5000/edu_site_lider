@@ -102,6 +102,7 @@ fn sendmail(user_input : Data) -> String {
 
 
     let data = std::io::read_to_string(input_data).unwrap();
+    println!("{:?}", data);
 
     let data = urldecode::decode(data);
 
@@ -111,11 +112,31 @@ fn sendmail(user_input : Data) -> String {
 
     let mut getting_email = true;
     let mut getting_text = true;
+    let mut getting_name = true;
 
+    let mut name = "";
     let mut email = "";
     let mut text = "";
 
     for part in data_parts {
+
+        if getting_name {
+            let tmp = part.split('=');
+            let mut first = true;
+            for tmp_p in tmp {
+                if first {
+                    first = false;
+                    continue;
+                } else {
+                    name = tmp_p;
+                    break;
+                }
+            }
+            getting_name = false;
+            continue;
+        }
+
+
         if getting_email {
             let tmp = part.split('=');
             let mut first = true;
@@ -149,15 +170,18 @@ fn sendmail(user_input : Data) -> String {
         }
     }
 
-    let text = text.replace("+", " ");
+    let manager_email = "solaris5000tv@gmail.com";
 
-    let clonetextdbg = text.clone();
+    let text = text.replace("+", " ");
+    let name = name.replace("+", " ");
+
+    // отправка почты к менеджеру
     let emmail = Message::builder()
     .from(sender.parse().unwrap())
-    .to(String::from(email).parse().unwrap())
-    .subject("Happy new year")
+    .to(String::from(manager_email).parse().unwrap())
+    .subject("Заказ покупателя на сайте \"Три Желания\"")
     .header(ContentType::TEXT_PLAIN)
-    .body(String::from(text))
+    .body(format!("Заказ от пользователя: {}\nE-mail: {}\n\n\nСодержимое заказа: {}", name, email, text))
     .unwrap();
 
     let creds = Credentials::new(senderemail.to_owned(), pwd.to_owned());
@@ -166,6 +190,21 @@ fn sendmail(user_input : Data) -> String {
     .unwrap()
     .credentials(creds)
     .build();
+
+    match mailer.send(&emmail) {
+        Ok(_) => {},
+        Err(e) => return format!("Message not sended, {}\n\nuser {}  email {} pwd {}", e, sender, senderemail, pwd),
+    };
+
+    // отправка почты к покупателю
+    let clonetextdbg = text.clone();
+    let emmail = Message::builder()
+    .from(sender.parse().unwrap())
+    .to(String::from(email).parse().unwrap())
+    .subject("Ваш заказ на сайте \"Три Желания\"")
+    .header(ContentType::TEXT_PLAIN)
+    .body(format!("Дорогой {}!\nВы совершили заказ на создание 3Д модели в компании \"Три Желания\"\n\n\nСодержимое вышего заказа: {}", name, text))
+    .unwrap();
 
     match mailer.send(&emmail) {
         Ok(_) => format!("Message succefully sednded, msg text : {}", clonetextdbg),
