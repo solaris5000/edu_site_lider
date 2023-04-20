@@ -220,7 +220,7 @@ fn exit() {
 fn main() {
 
     let cfg = rocket::config::Config::build(rocket::config::Environment::Development)
-        .address("127.0.0.1")
+        .address("0.0.0.0")
         .port(80)   
         .extra("template_dir",  "web/templates")
         .unwrap();
