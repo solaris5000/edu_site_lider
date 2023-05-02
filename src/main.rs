@@ -2,7 +2,7 @@
 
 #[macro_use] extern crate rocket;
 use std::io::Split;
-
+use rocket::response::Redirect;
 use rocket::Response;
 use rocket::Rocket;
 use rocket::response::content;
@@ -12,6 +12,7 @@ use rocket::response::NamedFile;
 use std::env;
 use std::path::{Path, PathBuf};
 use rocket::http::MediaType;
+use rocket::response::content::Html;
 use image;
 
 
@@ -23,10 +24,6 @@ use lettre::{Message, SmtpTransport, Transport};
 use std::fs::File;
 use std::io::{ self, BufRead, BufReader };
 
-#[get("/<name>/<age>")]
-fn hello(name: String, age: u8) -> String {
-    format!("Hello, {} year old named {}!", age, name)
-}
 
 #[get("/")]
 
@@ -73,13 +70,31 @@ fn css(filename: String) -> Option<NamedFile> {
 fn js(filename: String) -> Option<NamedFile> {
 
     let exepath = env::current_dir().unwrap();
-    let jspath =  exepath.join("static").join("css").join(filename);
+    let jspath =  exepath.join("static").join("js").join(filename);
     println!("{:?}", jspath);
     NamedFile::open(jspath).ok()
 }
 
+#[get("/video/<filename>")]
+fn video(filename: String) -> Option<NamedFile> {
+
+    let exepath = env::current_dir().unwrap();
+    let videopath =  exepath.join("static").join("video").join(filename);
+    println!("{:?}", videopath);
+    NamedFile::open(videopath).ok()
+}
+
+#[get("/resource/<filename>")]
+fn resource(filename: String) -> Option<NamedFile> {
+
+    let exepath = env::current_dir().unwrap();
+    let resourcepath =  exepath.join("static").join("resource").join(filename);
+    println!("{:?}", resourcepath);
+    NamedFile::open(resourcepath).ok()
+}
+
 #[post("/sendmail", data="<user_input>")]
-fn sendmail(user_input : Data) -> String {
+fn sendmail(user_input : Data) -> Html<&'static str> {
 
     let file = File::open("./creds".to_string()).unwrap(); 
     
@@ -193,7 +208,17 @@ fn sendmail(user_input : Data) -> String {
 
     match mailer.send(&emmail) {
         Ok(_) => {},
-        Err(e) => return format!("Message not sended, {}\n\nuser {}  email {} pwd {}", e, sender, senderemail, pwd),
+        Err(e) => {
+            println!("[ERROR 001]========================");
+            dbg!(email, name, text);
+            println!("[ERROR 001]========================");
+            return Html(r#"<html>Message not sended due an some error 001. Please contact support.
+        <script>
+        setTimeout(function () {
+            window.location.href = "/"; //will redirect to your blog page (an ex: blog.html)
+         }, 3000);
+        </script>
+        </html>"#)},
     };
 
     // отправка почты к покупателю
@@ -207,8 +232,25 @@ fn sendmail(user_input : Data) -> String {
     .unwrap();
 
     match mailer.send(&emmail) {
-        Ok(_) => format!("Message succefully sednded, msg text : {}", clonetextdbg),
-        Err(e) => format!("Message not sended, {}\n\nuser {}  email {} pwd {}", e, sender, senderemail, pwd),
+        Ok(_) => Html(r#"<html>Message succefully sedended.
+        <script>
+        setTimeout(function () {
+            window.location.href = "/"; //will redirect to your blog page (an ex: blog.html)
+         }, 3000);
+        </script>
+        </html>"#),
+        Err(e) => { 
+             println!("[ERROR 002]========================");
+            dbg!(email, name, text);
+            println!("[ERROR 002]========================");
+            return Html(r#"<html>Message not sended due an some error 002. Please contact support.
+            Html(r#"<html>Message not sended due an some error.
+        <script>
+        setTimeout(function () {
+            window.location.href = "/"; //will redirect to your blog page (an ex: blog.html)
+         }, 3000);
+        </script>
+        </html>"#)},
     }
 }
 
@@ -225,6 +267,6 @@ fn main() {
         .extra("template_dir",  "web/templates")
         .unwrap();
 
-    rocket::custom(cfg).mount("/", routes![index, exit, sendmail, img, css, js]).launch();
+    rocket::custom(cfg).mount("/", routes![index, exit, sendmail, img, css, js, video, resource]).launch();
 
 }
